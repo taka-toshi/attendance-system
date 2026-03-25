@@ -196,12 +196,22 @@ function friendlyError(code) {
 // ════════════════════════════════════════════
 // 11. 認証状態の監視
 // ════════════════════════════════════════════
-// まずメールリンク処理（ページ読み込み時）
+// onAuthStateChanged は先に登録して、初期表示の待ち時間を短くする
 (async () => {
-	const handled = await handleEmailLink();
-	if (handled) return; // onAuthStateChanged が続けて動く
+	let authResolved = false;
+	const isEmailLink = auth.isSignInWithEmailLink(globalThis.location.href);
+
+	// 通常アクセス時、認証状態の復元が遅い場合は先にログインUIを見せる
+	const fallbackTimer = globalThis.setTimeout(() => {
+		if (!authResolved && !isEmailLink) {
+			hideAll();
+			show("sec-login");
+		}
+	}, 1200);
 
 	auth.onAuthStateChanged(async (user) => {
+		authResolved = true;
+		globalThis.clearTimeout(fallbackTimer);
 		hideAll();
 
 		if (!user) {
@@ -232,4 +242,9 @@ function friendlyError(code) {
 			hide("session-panel");
 		}
 	});
+
+	// メールリンク処理は監視登録後に実行
+	if (isEmailLink) {
+		await handleEmailLink();
+	}
 })();
