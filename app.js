@@ -2,12 +2,12 @@
 // 1. Firebase 初期化
 // ════════════════════════════════════════════
 const firebaseConfig = {
-	apiKey: "AIzaSyCluE4MbrOdkFVyzkCcc17c4QFLVXC2HDQ",
-	authDomain: "attendance-system-c41d8.firebaseapp.com",
-	projectId: "attendance-system-c41d8",
-	storageBucket: "attendance-system-c41d8.firebasestorage.app",
-	messagingSenderId: "662073311348",
-	appId: "1:662073311348:web:a38383667c6df66c861121"
+  apiKey:            "__FIREBASE_API_KEY__",
+  authDomain:        "__FIREBASE_AUTH_DOMAIN__",
+  projectId:         "__FIREBASE_PROJECT_ID__",
+  storageBucket:     "__FIREBASE_STORAGE_BUCKET__",
+  messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+  appId:             "__FIREBASE_APP_ID__"
 };
 
 const app = firebase.initializeApp(firebaseConfig);
