@@ -192,37 +192,39 @@ function friendlyError(code) {
 // 11. 認証状態の監視
 // ════════════════════════════════════════════
 // まずメールリンク処理（ページ読み込み時）
-const handled = await handleEmailLink();
-if (handled) return; // onAuthStateChanged が続けて動く
+(async () => {
+	const handled = await handleEmailLink();
+	if (handled) return; // onAuthStateChanged が続けて動く
 
-auth.onAuthStateChanged(async (user) => {
-	hideAll();
+	auth.onAuthStateChanged(async (user) => {
+		hideAll();
 
-	if (!user) {
-		show("sec-login");
-		return;
-	}
+		if (!user) {
+			show("sec-login");
+			return;
+		}
 
-	// ドメインチェック（二重チェック）
-	if (!ALLOWED_DOMAIN_REGEX.test(user.email || "")) {
-		await auth.signOut();
-		show("sec-login");
-		showResult("login-result", "error", "⛔", "ドメインエラー",
-			`waseda.jp のアドレスのみ利用可能です`);
-		return;
-	}
+		// ドメインチェック（二重チェック）
+		if (!ALLOWED_DOMAIN_REGEX.test(user.email || "")) {
+			await auth.signOut();
+			show("sec-login");
+			showResult("login-result", "error", "⛔", "ドメインエラー",
+				`waseda.jp のアドレスのみ利用可能です`);
+			return;
+		}
 
-	show("sec-attend");
-	document.getElementById("display-email").textContent = user.email;
+		show("sec-attend");
+		document.getElementById("display-email").textContent = user.email;
 
-	const { otp, sessionId } = getUrlParams();
-	if (otp && sessionId) {
-		show("session-panel");
-		hide("no-session-panel");
-		document.getElementById("display-session").textContent = sessionId;
-		document.getElementById("display-otp").textContent = otp;
-	} else {
-		show("no-session-panel");
-		hide("session-panel");
-	}
-});
+		const { otp, sessionId } = getUrlParams();
+		if (otp && sessionId) {
+			show("session-panel");
+			hide("no-session-panel");
+			document.getElementById("display-session").textContent = sessionId;
+			document.getElementById("display-otp").textContent = otp;
+		} else {
+			show("no-session-panel");
+			hide("session-panel");
+		}
+	});
+})();
