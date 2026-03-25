@@ -40,7 +40,7 @@ function showResult(elId, type, icon, title, detail) {
 // 4. URLパラメータ取得
 // ════════════════════════════════════════════
 function getUrlParams() {
-	const p = new URLSearchParams(window.location.search);
+	const p = new URLSearchParams(globalThis.location.search);
 	return { otp: p.get("otp"), sessionId: p.get("sessionId") };
 }
 
@@ -48,19 +48,19 @@ function getUrlParams() {
 // 5. メールリンク認証処理
 // ════════════════════════════════════════════
 async function handleEmailLink() {
-	if (!auth.isSignInWithEmailLink(window.location.href)) return false;
+	if (!auth.isSignInWithEmailLink(globalThis.location.href)) return false;
 
-	let email = window.localStorage.getItem("emailForSignIn");
+	let email = globalThis.localStorage.getItem("emailForSignIn");
 	if (!email) {
-		email = window.prompt("確認のためメールアドレスを入力してください");
+		email = globalThis.prompt("確認のためメールアドレスを入力してください");
 	}
 	if (!email) return false;
 
 	try {
-		await auth.signInWithEmailLink(email, window.location.href);
-		window.localStorage.removeItem("emailForSignIn");
+		await auth.signInWithEmailLink(email, globalThis.location.href);
+		globalThis.localStorage.removeItem("emailForSignIn");
 		// URLをクリーンに
-		history.replaceState(null, "", window.location.pathname + window.location.search.replace(/[?&]?(apiKey|oobCode|mode|lang)=[^&]*/g, "").replace(/^&/, "?"));
+		history.replaceState(null, "", globalThis.location.pathname + globalThis.location.search.replaceAll(/[?&]?(apiKey|oobCode|mode|lang)=[^&]*/, "").replace(/^&/, "?"));
 		return true;
 	} catch (e) {
 		console.error("signInWithEmailLink error:", e);
@@ -82,13 +82,13 @@ document.getElementById("btn-login").addEventListener("click", async () => {
 	}
 
 	const actionCodeSettings = {
-		url: window.location.href,
+		url: globalThis.location.href,
 		handleCodeInApp: true
 	};
 
 	try {
 		await auth.sendSignInLinkToEmail(email, actionCodeSettings);
-		window.localStorage.setItem("emailForSignIn", email);
+		globalThis.localStorage.setItem("emailForSignIn", email);
 		hideAll();
 		show("sec-email-sent");
 		document.getElementById("sent-email-display").textContent = email;
@@ -192,39 +192,37 @@ function friendlyError(code) {
 // 11. 認証状態の監視
 // ════════════════════════════════════════════
 // まずメールリンク処理（ページ読み込み時）
-(async () => {
-	const handled = await handleEmailLink();
-	if (handled) return; // onAuthStateChanged が続けて動く
+const handled = await handleEmailLink();
+if (handled) return; // onAuthStateChanged が続けて動く
 
-	auth.onAuthStateChanged(async (user) => {
-		hideAll();
+auth.onAuthStateChanged(async (user) => {
+	hideAll();
 
-		if (!user) {
-			show("sec-login");
-			return;
-		}
+	if (!user) {
+		show("sec-login");
+		return;
+	}
 
-		// ドメインチェック（二重チェック）
-		if (!ALLOWED_DOMAIN_REGEX.test(user.email || "")) {
-			await auth.signOut();
-			show("sec-login");
-			showResult("login-result", "error", "⛔", "ドメインエラー",
-				`waseda.jp のアドレスのみ利用可能です`);
-			return;
-		}
+	// ドメインチェック（二重チェック）
+	if (!ALLOWED_DOMAIN_REGEX.test(user.email || "")) {
+		await auth.signOut();
+		show("sec-login");
+		showResult("login-result", "error", "⛔", "ドメインエラー",
+			`waseda.jp のアドレスのみ利用可能です`);
+		return;
+	}
 
-		show("sec-attend");
-		document.getElementById("display-email").textContent = user.email;
+	show("sec-attend");
+	document.getElementById("display-email").textContent = user.email;
 
-		const { otp, sessionId } = getUrlParams();
-		if (otp && sessionId) {
-			show("session-panel");
-			hide("no-session-panel");
-			document.getElementById("display-session").textContent = sessionId;
-			document.getElementById("display-otp").textContent = otp;
-		} else {
-			show("no-session-panel");
-			hide("session-panel");
-		}
-	});
-})();
+	const { otp, sessionId } = getUrlParams();
+	if (otp && sessionId) {
+		show("session-panel");
+		hide("no-session-panel");
+		document.getElementById("display-session").textContent = sessionId;
+		document.getElementById("display-otp").textContent = otp;
+	} else {
+		show("no-session-panel");
+		hide("session-panel");
+	}
+});
