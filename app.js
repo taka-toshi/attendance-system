@@ -29,9 +29,16 @@ const hideAll = () => ["sec-loading", "sec-login", "sec-email-sent", "sec-attend
 function showResult(elId, type, icon, title, detail) {
 	const el = document.getElementById(elId);
 	el.className = `result show ${type}`;
-	el.textContent = `
-		${icon}${title}${detail ? ${detail}: ""}
-	`;
+	const div1 = document.createElement("div");
+	const div2 = document.createElement("div");
+	const div3 = document.createElement("div");
+	div1.className = "result-icon";
+	div2.className = "result-title";
+	div3.className = "result-detail";
+	div1.textContent = icon;
+	div2.textContent = title;
+	div3.textContent = detail;
+	el.append(div1, div2, div3);
 }
 
 // ════════════════════════════════════════════
