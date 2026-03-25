@@ -29,7 +29,7 @@ const hideAll = () => ["sec-loading", "sec-login", "sec-email-sent", "sec-attend
 function showResult(elId, type, icon, title, detail) {
 	const el = document.getElementById(elId);
 	el.className = `result show ${type}`;
-	el.innerHTML = `
+	el.textContent = `
 		<div class="result-icon">${icon}</div>
 		<div class="result-title">${title}</div>
 		${detail ? `<div class="result-detail">${detail}</div>` : ""}
