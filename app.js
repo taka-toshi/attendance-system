@@ -17,7 +17,7 @@ const db = firebase.firestore();
 // ════════════════════════════════════════════
 // 2. 許可ドメイン
 // ════════════════════════════════════════════
-const ALLOWED_DOMAIN = "waseda.jp";
+const ALLOWED_DOMAIN_REGEX = /@([a-zA-Z0-9-]+\.)*waseda\.jp$/i;
 
 // ════════════════════════════════════════════
 // 3. UI ヘルパー
@@ -75,7 +75,7 @@ document.getElementById("btn-login").addEventListener("click", async () => {
 	const email = prompt("大学メールアドレスを入力してください（例: student@fuji.waseda.jp）");
 	if (!email) return;
 
-	if (!email.endsWith(ALLOWED_DOMAIN)) {
+	if (!ALLOWED_DOMAIN_REGEX.test(email)) {
 		showResult("login-result", "error", "⛔", "ドメインエラー",
 			`waseda.jp のアドレスのみ利用可能です`);
 		return;
@@ -205,7 +205,7 @@ function friendlyError(code) {
 		}
 
 		// ドメインチェック（二重チェック）
-		if (!user.email.endsWith(ALLOWED_DOMAIN)) {
+		if (!ALLOWED_DOMAIN_REGEX.test(user.email || "")) {
 			await auth.signOut();
 			show("sec-login");
 			showResult("login-result", "error", "⛔", "ドメインエラー",
