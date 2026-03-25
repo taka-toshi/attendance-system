@@ -134,29 +134,29 @@ document.getElementById("btn-attend").addEventListener("click", async () => {
 async function recordAttendance(db, user, otp, sessionId) {
 	if (!otp || !sessionId) throw new Error("INVALID_PARAMS");
 
-	// OTPドキュメントを特定
+	// 先にOTPドキュメントを1件特定（トランザクション内ではdoc参照のみ扱う）
 	const otpQuery = db.collection("otps")
 		.where("code", "==", otp)
-		.where("sessionId", "==", sessionId);
+		.where("sessionId", "==", sessionId)
+		.limit(1);
+	const otpQuerySnap = await otpQuery.get();
+	if (otpQuerySnap.empty) throw new Error("OTP_NOT_FOUND");
+
+	const otpDocRef = otpQuerySnap.docs[0].ref;
+	const attendRef = db.collection("attendance").doc(`${user.uid}_${sessionId}`);
 
 	await db.runTransaction(async (tx) => {
-		// OTPを検索
-		const otpSnap = await tx.get(otpQuery);
-		if (otpSnap.empty) throw new Error("OTP_NOT_FOUND");
-
-		const otpDocRef = otpSnap.docs[0].ref;
-		const otpData = otpSnap.docs[0].data();
+		const otpDoc = await tx.get(otpDocRef);
+		if (!otpDoc.exists) throw new Error("OTP_NOT_FOUND");
+		const otpData = otpDoc.data();
 
 		if (!otpData) throw new Error("OTP_NOT_FOUND");
 		if (otpData.used) throw new Error("OTP_ALREADY_USED");
 		if (otpData.sessionId !== sessionId) throw new Error("SESSION_MISMATCH");
 
-		// 同一ユーザの重複出席チェック
-		const attendQuery = db.collection("attendance")
-			.where("uid", "==", user.uid)
-			.where("sessionId", "==", sessionId);
-		const attendSnap = await tx.get(attendQuery);
-		if (!attendSnap.empty) throw new Error("ALREADY_ATTENDED");
+		// 同一ユーザの重複出席チェック（uid+sessionIdの固定IDで判定）
+		const attendSnap = await tx.get(attendRef);
+		if (attendSnap.exists) throw new Error("ALREADY_ATTENDED");
 
 		// OTPを使用済みに更新
 		tx.update(otpDocRef, {
@@ -165,7 +165,6 @@ async function recordAttendance(db, user, otp, sessionId) {
 		});
 
 		// 出席記録を追加
-		const attendRef = db.collection("attendance").doc();
 		tx.set(attendRef, {
 			uid: user.uid,
 			email: user.email,
