@@ -126,6 +126,7 @@ async function startEmailLinkSignIn(email) {
 function showResult(elId, type, icon, title, detail) {
 	const el = document.getElementById(elId);
 	el.className = `result show ${type}`;
+	el.replaceChildren();
 	const div1 = document.createElement("div");
 	const div2 = document.createElement("div");
 	const div3 = document.createElement("div");
