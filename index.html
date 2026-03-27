@@ -47,6 +47,15 @@
         <button class="btn btn-primary" id="btn-login">
           メールでログイン
         </button>
+        <div id="email-input-panel" class="email-input-panel hidden">
+          <label class="email-input-label" id="email-input-label" for="email-input"></label>
+          <input id="email-input" class="email-input" type="email" inputmode="email" autocomplete="email"
+            placeholder="student@fuji.waseda.jp" />
+          <div class="email-input-actions">
+            <button class="btn btn-primary" id="btn-email-submit">続行</button>
+            <button class="btn btn-ghost" id="btn-email-cancel">キャンセル</button>
+          </div>
+        </div>
         <div id="recent-login-wrap" class="recent-login hidden">
           <div class="recent-login-label">直近メールアドレス</div>
           <button class="btn btn-ghost btn-recent" id="btn-login-recent"></button>

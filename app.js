@@ -27,6 +27,54 @@ const ALLOWED_DOMAIN_REGEX = /@([a-zA-Z0-9-]+\.)*waseda\.jp$/i;
 const show = id => document.getElementById(id).classList.remove("hidden");
 const hide = id => document.getElementById(id).classList.add("hidden");
 const hideAll = () => ["sec-loading", "sec-login", "sec-email-sent", "sec-attend"].forEach(hide);
+let pendingEmailResolver = null;
+
+function getEmailInputValue() {
+	const input = document.getElementById("email-input");
+	if (!input) return "";
+	return input.value.trim();
+}
+
+function closeEmailInputPanel(value) {
+	const panel = document.getElementById("email-input-panel");
+	const submit = document.getElementById("btn-email-submit");
+	const cancel = document.getElementById("btn-email-cancel");
+	if (panel) panel.classList.add("hidden");
+	if (submit) submit.textContent = "続行";
+	if (cancel) cancel.classList.remove("hidden");
+
+	if (pendingEmailResolver) {
+		const resolve = pendingEmailResolver;
+		pendingEmailResolver = null;
+		resolve(value);
+	}
+}
+
+function requestEmailInput({ label, submitText = "続行", initialValue = "" }) {
+	const panel = document.getElementById("email-input-panel");
+	const labelEl = document.getElementById("email-input-label");
+	const input = document.getElementById("email-input");
+	const submit = document.getElementById("btn-email-submit");
+	const cancel = document.getElementById("btn-email-cancel");
+
+	if (!panel || !labelEl || !input || !submit || !cancel) {
+		return Promise.resolve(null);
+	}
+
+	if (pendingEmailResolver) {
+		closeEmailInputPanel(null);
+	}
+
+	labelEl.textContent = label;
+	submit.textContent = submitText;
+	input.value = initialValue;
+	panel.classList.remove("hidden");
+	globalThis.setTimeout(() => input.focus(), 0);
+
+	return new Promise((resolve) => {
+		pendingEmailResolver = resolve;
+	});
+}
 
 function getRecentEmail() {
 	const email = globalThis.localStorage.getItem(RECENT_EMAIL_KEY);
@@ -106,7 +154,14 @@ async function handleEmailLink() {
 
 	let email = globalThis.localStorage.getItem(EMAIL_SIGNIN_KEY);
 	if (!email) {
-		email = globalThis.prompt("確認のためメールアドレスを入力してください");
+		hideAll();
+		show("sec-login");
+		renderRecentLoginButton();
+		email = await requestEmailInput({
+			label: "確認のためメールアドレスを入力してください",
+			submitText: "認証を続行",
+			initialValue: getRecentEmail()
+		});
 	}
 	if (!email) return false;
 
@@ -131,7 +186,11 @@ async function handleEmailLink() {
 // 6. ログインボタン
 // ════════════════════════════════════════════
 document.getElementById("btn-login").addEventListener("click", async () => {
-	const email = prompt("大学メールアドレスを入力してください（例: student@fuji.waseda.jp）");
+	const email = await requestEmailInput({
+		label: "大学メールアドレスを入力してください（例: student@fuji.waseda.jp）",
+		submitText: "ログインメールを送信",
+		initialValue: getRecentEmail()
+	});
 	if (!email) return;
 	await startEmailLinkSignIn(email);
 });
@@ -143,6 +202,31 @@ document.getElementById("btn-login-recent").addEventListener("click", async () =
 		return;
 	}
 	await startEmailLinkSignIn(email);
+});
+
+document.getElementById("btn-email-submit").addEventListener("click", () => {
+	const email = getEmailInputValue();
+	if (!email) return;
+	closeEmailInputPanel(email);
+});
+
+document.getElementById("btn-email-cancel").addEventListener("click", () => {
+	closeEmailInputPanel(null);
+});
+
+document.getElementById("email-input").addEventListener("keydown", (e) => {
+	if (e.key === "Enter") {
+		e.preventDefault();
+		const email = getEmailInputValue();
+		if (!email) return;
+		closeEmailInputPanel(email);
+		return;
+	}
+
+	if (e.key === "Escape") {
+		e.preventDefault();
+		closeEmailInputPanel(null);
+	}
 });
 
 // ════════════════════════════════════════════

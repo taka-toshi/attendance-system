@@ -299,6 +299,47 @@ h1 span {
   transform: none !important;
 }
 
+.email-input-panel {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, .03);
+}
+
+.email-input-label {
+  display: block;
+  margin-bottom: .55rem;
+  font-size: .8rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.email-input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, .2);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: .85rem;
+  padding: .7rem .75rem;
+  outline: none;
+}
+
+.email-input:focus {
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 2px rgba(0, 153, 255, .18);
+}
+
+.email-input-actions {
+  margin-top: .75rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .5rem;
+}
+
 .recent-login {
   margin-top: 1rem;
   padding-top: .9rem;
