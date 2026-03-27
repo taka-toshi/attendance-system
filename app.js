@@ -13,6 +13,8 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const EMAIL_SIGNIN_KEY = "emailForSignIn";
+const RECENT_EMAIL_KEY = "recentLoginEmail";
 
 // ════════════════════════════════════════════
 // 2. 許可ドメイン
@@ -25,6 +27,53 @@ const ALLOWED_DOMAIN_REGEX = /@([a-zA-Z0-9-]+\.)*waseda\.jp$/i;
 const show = id => document.getElementById(id).classList.remove("hidden");
 const hide = id => document.getElementById(id).classList.add("hidden");
 const hideAll = () => ["sec-loading", "sec-login", "sec-email-sent", "sec-attend"].forEach(hide);
+
+function getRecentEmail() {
+	const email = globalThis.localStorage.getItem(RECENT_EMAIL_KEY);
+	if (!email || !ALLOWED_DOMAIN_REGEX.test(email)) return "";
+	return email;
+}
+
+function renderRecentLoginButton() {
+	const wrap = document.getElementById("recent-login-wrap");
+	const btn = document.getElementById("btn-login-recent");
+	if (!wrap || !btn) return;
+
+	const email = getRecentEmail();
+	if (!email) {
+		wrap.classList.add("hidden");
+		btn.textContent = "";
+		return;
+	}
+
+	btn.textContent = `${email} でログイン`;
+	wrap.classList.remove("hidden");
+}
+
+async function startEmailLinkSignIn(email) {
+	if (!ALLOWED_DOMAIN_REGEX.test(email)) {
+		showResult("login-result", "error", "⛔", "ドメインエラー",
+			`waseda.jp のアドレスのみ利用可能です`);
+		return;
+	}
+
+	const actionCodeSettings = {
+		url: globalThis.location.href,
+		handleCodeInApp: true
+	};
+
+	try {
+		await auth.sendSignInLinkToEmail(email, actionCodeSettings);
+		globalThis.localStorage.setItem(EMAIL_SIGNIN_KEY, email);
+		globalThis.localStorage.setItem(RECENT_EMAIL_KEY, email);
+		renderRecentLoginButton();
+		hideAll();
+		show("sec-email-sent");
+		document.getElementById("sent-email-display").textContent = email;
+	} catch (e) {
+		showResult("login-result", "error", "❌", "送信エラー", e.message);
+	}
+}
 
 function showResult(elId, type, icon, title, detail) {
 	const el = document.getElementById(elId);
@@ -55,15 +104,20 @@ function getUrlParams() {
 async function handleEmailLink() {
 	if (!auth.isSignInWithEmailLink(globalThis.location.href)) return false;
 
-	let email = globalThis.localStorage.getItem("emailForSignIn");
+	let email = globalThis.localStorage.getItem(EMAIL_SIGNIN_KEY);
 	if (!email) {
 		email = globalThis.prompt("確認のためメールアドレスを入力してください");
 	}
 	if (!email) return false;
 
+	if (ALLOWED_DOMAIN_REGEX.test(email)) {
+		globalThis.localStorage.setItem(RECENT_EMAIL_KEY, email);
+		renderRecentLoginButton();
+	}
+
 	try {
 		await auth.signInWithEmailLink(email, globalThis.location.href);
-		globalThis.localStorage.removeItem("emailForSignIn");
+		globalThis.localStorage.removeItem(EMAIL_SIGNIN_KEY);
 		// URLをクリーンに
 		history.replaceState(null, "", globalThis.location.pathname + globalThis.location.search.replaceAll(/[?&]?(apiKey|oobCode|mode|lang)=[^&]*/, "").replace(/^&/, "?"));
 		return true;
@@ -79,27 +133,16 @@ async function handleEmailLink() {
 document.getElementById("btn-login").addEventListener("click", async () => {
 	const email = prompt("大学メールアドレスを入力してください（例: student@fuji.waseda.jp）");
 	if (!email) return;
+	await startEmailLinkSignIn(email);
+});
 
-	if (!ALLOWED_DOMAIN_REGEX.test(email)) {
-		showResult("login-result", "error", "⛔", "ドメインエラー",
-			`waseda.jp のアドレスのみ利用可能です`);
+document.getElementById("btn-login-recent").addEventListener("click", async () => {
+	const email = getRecentEmail();
+	if (!email) {
+		renderRecentLoginButton();
 		return;
 	}
-
-	const actionCodeSettings = {
-		url: globalThis.location.href,
-		handleCodeInApp: true
-	};
-
-	try {
-		await auth.sendSignInLinkToEmail(email, actionCodeSettings);
-		globalThis.localStorage.setItem("emailForSignIn", email);
-		hideAll();
-		show("sec-email-sent");
-		document.getElementById("sent-email-display").textContent = email;
-	} catch (e) {
-		showResult("login-result", "error", "❌", "送信エラー", e.message);
-	}
+	await startEmailLinkSignIn(email);
 });
 
 // ════════════════════════════════════════════
@@ -213,6 +256,7 @@ function friendlyError(code) {
 		authResolved = true;
 		globalThis.clearTimeout(fallbackTimer);
 		hideAll();
+		renderRecentLoginButton();
 
 		if (!user) {
 			show("sec-login");
@@ -230,6 +274,10 @@ function friendlyError(code) {
 
 		show("sec-attend");
 		document.getElementById("display-email").textContent = user.email;
+		if (user.email && ALLOWED_DOMAIN_REGEX.test(user.email)) {
+			globalThis.localStorage.setItem(RECENT_EMAIL_KEY, user.email);
+			renderRecentLoginButton();
+		}
 
 		const { otp, sessionId } = getUrlParams();
 		if (otp && sessionId) {

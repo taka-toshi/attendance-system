@@ -299,6 +299,27 @@ h1 span {
   transform: none !important;
 }
 
+.recent-login {
+  margin-top: 1rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--border);
+}
+
+.recent-login-label {
+  font-size: .72rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-bottom: .5rem;
+  letter-spacing: .05em;
+}
+
+.btn-recent {
+  width: 100%;
+  justify-content: flex-start;
+  font-family: var(--mono);
+  word-break: break-all;
+}
+
 /* -- result box -- */
 .result {
   border-radius: 10px;
