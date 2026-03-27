@@ -123,7 +123,7 @@ document.getElementById("btn-attend").addEventListener("click", async () => {
 	try {
 		await recordAttendance(db, user, otp, sessionId);
 		showResult("attend-result", "success", "✅", "出席を記録しました",
-			`Session: ${sessionId} | ${new Date().toLocaleString("ja-JP")}`);
+			`Session: ${sessionId} (${new Date().toLocaleString("ja-JP")})`);
 		btn.innerHTML = "出席済み";
 	} catch (e) {
 		const msg = friendlyError(e.message);
