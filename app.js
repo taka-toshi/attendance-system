@@ -46,7 +46,7 @@ function showResult(elId, type, icon, title, detail) {
 // ════════════════════════════════════════════
 function getUrlParams() {
 	const p = new URLSearchParams(globalThis.location.search);
-	return { otp: p.get("otp"), sessionId: p.get("sessionId") };
+	return { otp: p.get("otp"), sessionId: p.get("sid") };
 }
 
 // ════════════════════════════════════════════
