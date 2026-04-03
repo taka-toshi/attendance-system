@@ -37,9 +37,14 @@ function getEmailInputValue() {
 
 function closeEmailInputPanel(value) {
 	const panel = document.getElementById("email-input-panel");
+	const labelEl = document.getElementById("email-input-label");
 	const submit = document.getElementById("btn-email-submit");
 	const cancel = document.getElementById("btn-email-cancel");
 	if (panel) panel.classList.add("hidden");
+	if (labelEl) {
+		labelEl.textContent = "メールアドレス";
+		labelEl.classList.add("sr-only");
+	}
 	if (submit) submit.textContent = "続行";
 	if (cancel) cancel.classList.remove("hidden");
 
@@ -50,7 +55,7 @@ function closeEmailInputPanel(value) {
 	}
 }
 
-function requestEmailInput({ label, submitText = "続行", initialValue = "" }) {
+function requestEmailInput({ labelText = "メールアドレス", showLabel = false, submitText = "続行", initialValue = "" }) {
 	const panel = document.getElementById("email-input-panel");
 	const labelEl = document.getElementById("email-input-label");
 	const input = document.getElementById("email-input");
@@ -65,7 +70,8 @@ function requestEmailInput({ label, submitText = "続行", initialValue = "" }) 
 		closeEmailInputPanel(null);
 	}
 
-	labelEl.textContent = label;
+	labelEl.textContent = labelText;
+	labelEl.classList.toggle("sr-only", !showLabel);
 	submit.textContent = submitText;
 	input.value = initialValue;
 	panel.classList.remove("hidden");
@@ -159,7 +165,8 @@ async function handleEmailLink() {
 		show("sec-login");
 		renderRecentLoginButton();
 		email = await requestEmailInput({
-			label: "確認のためメールアドレスを入力してください",
+			labelText: "確認のためメールアドレスを入力してください",
+			showLabel: true,
 			submitText: "認証を続行",
 			initialValue: getRecentEmail()
 		});
@@ -188,7 +195,6 @@ async function handleEmailLink() {
 // ════════════════════════════════════════════
 document.getElementById("btn-login").addEventListener("click", async () => {
 	const email = await requestEmailInput({
-		label: "大学メールアドレスを入力してください（例: student@fuji.waseda.jp）",
 		submitText: "ログインメールを送信",
 		initialValue: getRecentEmail()
 	});
