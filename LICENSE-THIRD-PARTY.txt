@@ -5,3 +5,13 @@ Third-Party Libraries Used
    Author: Google
    License: Apache License, Version 2.0
    URL: https://material.io/resources/icons/
+
+2. Firebase JavaScript SDK
+   Author: Google
+   License: Apache License, Version 2.0
+   URL: https://firebase.google.com/
+
+3. Google Fonts - DM Mono & Noto Sans JP
+   Author: Google
+   License: SIL Open Font License, Version 1.1
+   URL: https://fonts.google.com/
